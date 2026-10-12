@@ -352,7 +352,10 @@ namespace PurrNet.Steam
 
         private void FailSend(HSteamNetConnection conn, string reason)
         {
-            PurrLogger.LogError($"Disconnecting Steam connection {conn}: {reason}");
+            if (_sendQueues.TryGetValue(conn, out var queue) && queue.peerClosed)
+                PurrLogger.Log($"Disconnecting Steam connection {conn}: {reason}");
+            else
+                PurrLogger.LogError($"Disconnecting Steam connection {conn}: {reason}");
             CloseConnection(conn, reason, true);
         }
 

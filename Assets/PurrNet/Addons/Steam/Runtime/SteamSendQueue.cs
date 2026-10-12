@@ -45,6 +45,11 @@ namespace PurrNet.Steam
 
         public SteamSendStatistics statistics => _statistics;
 
+        /// <summary>
+        /// True when the last failed send was refused because Steam had already closed the connection.
+        /// </summary>
+        public bool peerClosed => _statistics.lastSendResult == (int)EResult.k_EResultNoConnection;
+
         public SteamSendQueue(NativeSend send, Func<double> clock)
         {
             _send = send;
