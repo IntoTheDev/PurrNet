@@ -9,6 +9,9 @@ namespace PurrNet.Modules
     {
         protected uint mostRecentId;
         private uint nextId = 1;
+        private uint _ackFloor;
+
+        public uint reportedMissingId;
 
         public uint GenerateId()
         {
@@ -25,8 +28,20 @@ namespace PurrNet.Modules
 
         public void ValidateId(PackedUInt dataValueId)
         {
+            if (dataValueId.value <= _ackFloor)
+                return;
+
             if (dataValueId.value > mostRecentId)
                 mostRecentId = dataValueId.value;
+        }
+
+        public void ResetBaseline(uint missingId)
+        {
+            if (mostRecentId == missingId)
+                mostRecentId = 0;
+
+            if (missingId > _ackFloor)
+                _ackFloor = missingId;
         }
     }
 
