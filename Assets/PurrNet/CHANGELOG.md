@@ -1,3 +1,10 @@
+## [1.24.2-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.3...v1.24.2-beta.4) (2026-10-13)
+
+
+### Bug Fixes
+
+* mark dep of unity UI ([5f46872](https://github.com/PurrNet/PurrNet/commit/5f46872d799932c8a67e24e5f89bbd50c95cfc5c))
+
 ## [1.24.2-beta.3](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.2...v1.24.2-beta.3) (2026-10-12)
 
 
