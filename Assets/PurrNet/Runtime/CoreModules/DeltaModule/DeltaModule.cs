@@ -67,6 +67,7 @@ namespace PurrNet.Modules
             private uint[] _ackFloor = new uint[16];
             private int _ackedLength;
             private uint _nextId = 1;
+            private bool _refreshHead;
             private uint _minAcked;
             private bool _minAckedValid;
 
@@ -98,13 +99,14 @@ namespace PurrNet.Modules
 
             public void ReconcileHead(in T value, float now)
             {
-                if (_history.Count > 0 && EqualityComparer<T>.Default.Equals(_history[^1].value, value))
+                if (!_refreshHead && _history.Count > 0 && EqualityComparer<T>.Default.Equals(_history[^1].value, value))
                     return;
 
                 if (_history.Count >= MAX_HISTORY_SIZE)
                     _history.RemoveAt(0);
 
                 _history.Add(new Entry { id = _nextId++, value = value, enterTime = now });
+                _refreshHead = false;
                 _slotCount = 0;
             }
 
@@ -190,15 +192,15 @@ namespace PurrNet.Modules
 
             public override void ResetAck(int playerSlot, uint missingId)
             {
-                if (playerSlot >= _ackedLength)
+                if (missingId == 0 || playerSlot >= _ackedLength || _acked[playerSlot] != missingId)
                     return;
 
                 if (missingId > _ackFloor[playerSlot])
                     _ackFloor[playerSlot] = missingId;
 
-                if (_acked[playerSlot] != missingId)
-                    return;
-
+                // An unchanged full resend must have a fresh ID: the ACK floor also
+                // rejects delayed ACKs for the missing head. A newer head is already safe.
+                _refreshHead |= headId == missingId;
                 _acked[playerSlot] = 0;
                 if (missingId == _minAcked)
                     _minAckedValid = false;
@@ -267,6 +269,7 @@ namespace PurrNet.Modules
                 Array.Clear(_acked, 0, _ackedLength);
                 Array.Clear(_ackFloor, 0, _ackedLength);
                 _ackedLength = 0;
+                _refreshHead = false;
                 _minAckedValid = false;
             }
         }
@@ -825,8 +828,8 @@ namespace PurrNet.Modules
             if (_broadcaster != null)
             {
                 if (_asServer)
-                    _broadcaster.Send(sender, nack, Channel.Unreliable);
-                else _broadcaster.SendToServer(nack, Channel.Unreliable);
+                    _broadcaster.Send(sender, nack, Channel.ReliableUnordered);
+                else _broadcaster.SendToServer(nack, Channel.ReliableUnordered);
             }
 
             throw BypassLoggingException.instance;

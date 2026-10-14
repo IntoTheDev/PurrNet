@@ -37,8 +37,10 @@ namespace PurrNet.Modules
 
         public void ResetBaseline(uint missingId)
         {
-            if (mostRecentId == missingId)
-                mostRecentId = 0;
+            if (missingId == 0 || mostRecentId != missingId)
+                return;
+
+            mostRecentId = 0;
 
             if (missingId > _ackFloor)
                 _ackFloor = missingId;
