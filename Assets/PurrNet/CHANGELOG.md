@@ -1,3 +1,10 @@
+## [1.24.2-beta.6](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.5...v1.24.2-beta.6) (2026-10-14)
+
+
+### Bug Fixes
+
+* Quiter steam failures ([d6bd5e9](https://github.com/PurrNet/PurrNet/commit/d6bd5e92a3bc017b0a3aafbae2c732fdf41fa95c))
+
 ## [1.24.2-beta.5](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.4...v1.24.2-beta.5) (2026-10-14)
 
 
