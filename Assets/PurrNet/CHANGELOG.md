@@ -1,3 +1,10 @@
+## [1.24.2-beta.5](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.4...v1.24.2-beta.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* code stripping issue ([59eae08](https://github.com/PurrNet/PurrNet/commit/59eae08d83c58b56a3df68d6067ddd389d71b3bf))
+
 ## [1.24.2-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.3...v1.24.2-beta.4) (2026-10-13)
 
 
