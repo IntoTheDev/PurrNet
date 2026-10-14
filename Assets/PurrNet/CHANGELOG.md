@@ -1,3 +1,10 @@
+## [1.24.2-beta.9](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.8...v1.24.2-beta.9) (2026-10-14)
+
+
+### Bug Fixes
+
+* **delta:** harden baseline resync and restore delta compression ([09e41d8](https://github.com/PurrNet/PurrNet/commit/09e41d84e36f4efffe10f403e9e85d1a5131ad7a))
+
 ## [1.24.2-beta.8](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.7...v1.24.2-beta.8) (2026-10-14)
 
 
