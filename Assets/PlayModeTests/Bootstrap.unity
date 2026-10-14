@@ -444,6 +444,7 @@ GameObject:
   - component: {fileID: 54853823}
   - component: {fileID: 54853824}
   - component: {fileID: 54853825}
+  - component: {fileID: 54853826}
   m_Layer: 0
   m_Name: IdentityRPC
   m_TagString: Untagged
@@ -580,6 +581,20 @@ MonoBehaviour:
   _doneTimeoutSeconds: 30
   _despawnTimeoutSeconds: 30
   _barrierTimeoutSeconds: 60
+--- !u!114 &54853826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 54853817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c1e7a9f3b2d4e6f8a0b1c2d3e4f5a61, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PurrNet.PlayModeTests::TargetRpcBeforeDespawnScenario
+  _observeTimeoutSeconds: 15
+  _replyTimeoutSeconds: 10
 --- !u!1 &108535981
 GameObject:
   m_ObjectHideFlags: 0
