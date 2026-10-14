@@ -1,3 +1,10 @@
+## [1.24.2-beta.8](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.7...v1.24.2-beta.8) (2026-10-14)
+
+
+### Bug Fixes
+
+* **delta:** receiver rejects deltas against a missing baseline and requests a full resync (DeltaBaselineMissing), ack floor; reset prevType on ack-batch MTU split; regression tests ([e1ddc8c](https://github.com/PurrNet/PurrNet/commit/e1ddc8cfb7bf3d46920104d4fa68f8d28d23069b))
+
 ## [1.24.2-beta.7](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.6...v1.24.2-beta.7) (2026-10-14)
 
 
