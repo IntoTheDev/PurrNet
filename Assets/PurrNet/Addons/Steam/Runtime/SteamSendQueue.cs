@@ -176,5 +176,37 @@ namespace PurrNet.Steam
             _statistics.queuedReliableMessages = 0;
         }
     }
+
+    internal static class SteamConnectionStatus
+    {
+        internal static string Describe(HSteamNetConnection conn, bool dedicated, out bool peerGone)
+        {
+            peerGone = false;
+            var status = new SteamNetConnectionRealTimeStatus_t();
+            var lanes = new SteamNetConnectionRealTimeLaneStatus_t();
+            EResult result;
+            try
+            {
+                result = dedicated
+                    ? SteamGameServerNetworkingSockets.GetConnectionRealTimeStatus(conn, ref status, 0, ref lanes)
+                    : SteamNetworkingSockets.GetConnectionRealTimeStatus(conn, ref status, 0, ref lanes);
+            }
+            catch (Exception e)
+            {
+                return $"status unavailable ({e.Message})";
+            }
+
+            if (result != EResult.k_EResultOK)
+            {
+                peerGone = true;
+                return $"status unavailable ({result})";
+            }
+
+            peerGone = status.m_eState != ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connected;
+            return $"state {status.m_eState}, ping {status.m_nPing} ms, quality local {status.m_flConnectionQualityLocal:0.##} remote {status.m_flConnectionQualityRemote:0.##}, " +
+                   $"out {status.m_flOutBytesPerSec / 1024f:0.#} KiB/s, in {status.m_flInBytesPerSec / 1024f:0.#} KiB/s, rate {status.m_nSendRateBytesPerSecond / 1024} KiB/s, " +
+                   $"pending reliable {status.m_cbPendingReliable} B, unacked reliable {status.m_cbSentUnackedReliable} B";
+        }
+    }
 }
 #endif
