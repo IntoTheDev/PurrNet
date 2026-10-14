@@ -1,3 +1,24 @@
+## [1.24.2-beta.5](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.4...v1.24.2-beta.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* code stripping issue ([59eae08](https://github.com/PurrNet/PurrNet/commit/59eae08d83c58b56a3df68d6067ddd389d71b3bf))
+
+## [1.24.2-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.3...v1.24.2-beta.4) (2026-10-13)
+
+
+### Bug Fixes
+
+* mark dep of unity UI ([5f46872](https://github.com/PurrNet/PurrNet/commit/5f46872d799932c8a67e24e5f89bbd50c95cfc5c))
+
+## [1.24.2-beta.3](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.2...v1.24.2-beta.3) (2026-10-12)
+
+
+### Bug Fixes
+
+* Steam connection logging improvements ([0d8ae53](https://github.com/PurrNet/PurrNet/commit/0d8ae53d03cabb99576568690c2f6456cd0f981d))
+
 ## [1.24.2-beta.2](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.1...v1.24.2-beta.2) (2026-10-08)
 
 
