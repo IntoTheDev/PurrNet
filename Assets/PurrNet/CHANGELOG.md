@@ -1,3 +1,10 @@
+## [1.24.2-beta.7](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.6...v1.24.2-beta.7) (2026-10-14)
+
+
+### Bug Fixes
+
+* deliver host client RPCs in-process so they arrive before a despawn ([0f45d19](https://github.com/PurrNet/PurrNet/commit/0f45d192fec649ecaa39d77aec66a2437fea06bb))
+
 ## [1.24.2-beta.6](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.5...v1.24.2-beta.6) (2026-10-14)
 
 
