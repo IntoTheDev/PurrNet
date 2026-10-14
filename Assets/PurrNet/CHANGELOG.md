@@ -1,3 +1,10 @@
+## [1.24.2-beta.10](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.9...v1.24.2-beta.10) (2026-10-14)
+
+
+### Bug Fixes
+
+* stop SyncVar ticking once the connection is gone ([e92a261](https://github.com/PurrNet/PurrNet/commit/e92a261acc1a78331d3505bb7a2f3f91107dbc83))
+
 ## [1.24.2-beta.9](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.8...v1.24.2-beta.9) (2026-10-14)
 
 
