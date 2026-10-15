@@ -4360,6 +4360,8 @@ namespace PurrNet.Codegen
                             typesToIgnoreForSerialization, typesToIgnoreForDelta);
                 }
 
+                GenerateRegistrationIndex.Generate(assemblyDefinition);
+
                 var pe = new MemoryStream();
                 var pdb = new MemoryStream();
 

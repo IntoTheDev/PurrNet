@@ -676,6 +676,24 @@ namespace PurrNet
                 if (!ReferencesAssembly(assembly, attrAssemblyName))
                     continue;
 
+                var registrationIndex = assembly.GetType(PackerRegistrationEntry.IndexTypeName, false);
+                if (registrationIndex != null)
+                {
+                    var getRegistrations = registrationIndex.GetMethod(PackerRegistrationEntry.IndexMethodName,
+                        BindingFlags.Public | BindingFlags.Static);
+                    var entries = (PackerRegistrationEntry[])getRegistrations.Invoke(null, null);
+                    for (int i = 0; i < entries.Length; i++)
+                    {
+                        var entry = entries[i];
+                        methodsToCall.Add(new TypeRegistrer
+                        {
+                            method = (MethodInfo)MethodBase.GetMethodFromHandle(entry.method, entry.declaringType),
+                            priority = entry.priority
+                        });
+                    }
+                    continue;
+                }
+
                 Type[] types;
 
                 try
