@@ -14,6 +14,7 @@ using UnityEngine.Serialization;
 namespace PurrNet
 {
     [AddComponentMenu("PurrNet/Network Transform")]
+    [PackerDependencies(typeof(NetworkID), typeof(SceneID))]
     public sealed class NetworkTransform : NetworkIdentity, INetworkTransform
     {
         public static INetworkTransformPositionTransform defaultPositionTransform { get; set; }
