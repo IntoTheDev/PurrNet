@@ -77,6 +77,14 @@ namespace PurrNet.Packing
             WriteFunc = ptr;
         }
 
+        [UsedByIL]
+        public static unsafe void RegisterGeneratedWriter(DeltaWriteFunc<T> write, IntPtr pointer)
+        {
+            if (_hasWriter || RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+                return;
+            RegisterWriterWithPointer(write, (delegate*<BitPacker, T, T, bool>)(void*)pointer);
+        }
+
         public static unsafe void RegisterReader(DeltaReadFunc<T> read)
         {
             if (_hasReader || RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -107,6 +115,14 @@ namespace PurrNet.Packing
             _hasReader = true;
             DeltaPacker.RegisterReader(typeof(T), b.Method);
             ReadFunc = ptr;
+        }
+
+        [UsedByIL]
+        public static unsafe void RegisterGeneratedReader(DeltaReadFunc<T> read, IntPtr pointer)
+        {
+            if (_hasReader || RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+                return;
+            RegisterReaderWithPointer(read, (delegate*<BitPacker, T, ref T, void>)(void*)pointer);
         }
 
         [UsedByIL, MethodImpl(MethodImplOptions.AggressiveInlining)]
