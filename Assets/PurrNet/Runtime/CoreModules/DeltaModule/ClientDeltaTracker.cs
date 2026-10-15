@@ -208,6 +208,17 @@ namespace PurrNet.Modules
             return true;
         }
 
+        public void Remove(uint id)
+        {
+            int index = BinarySearch(id);
+            if (index >= _history.Count || _history[index].key != id)
+                return;
+
+            if (canContainDisposable && _history[index].value is IDisposable disposable)
+                disposable.Dispose();
+            _history.RemoveAt(index);
+        }
+
         public bool TryGetValue(uint id, out T o)
         {
             int index = BinarySearch(id);

@@ -800,12 +800,122 @@ namespace PurrNet.Modules
                 };
 
                 Batch(sender, data);
+                LastRead<T>.Record(this, sender, precomputedHash, lastConfirmedId, valueId);
             }
             else if (lastConfirmedId != 0)
             {
                 newValue = Packer.Copy(oldValue);
+                LastRead<T>.Record(this, sender, precomputedHash, lastConfirmedId, 0);
             }
             else newValue = default;
+        }
+
+        private static class LastRead<T>
+        {
+            public static DeltaModule module;
+            public static PlayerID sender;
+            public static uint keyHash;
+            public static uint baselineId;
+            public static uint valueId;
+            public static int frame;
+            public static uint rejectedKeyHash;
+            public static uint rejectedBaselineId;
+            public static uint rejectedValueId;
+
+            public static void Record(DeltaModule owner, PlayerID from, uint hash, uint baseline, uint value)
+            {
+                module = owner;
+                sender = from;
+                keyHash = hash;
+                baselineId = baseline;
+                valueId = value;
+                frame = Time.frameCount;
+            }
+        }
+
+        /// <summary>
+        /// Discards the value most recently delta-decoded for <typeparamref name="T"/> and makes its sender
+        /// re-encode from scratch. Call it from an RPC body whose delta-packed argument failed validation:
+        /// a corrupt baseline otherwise keeps decoding into the same invalid value for as long as the sender
+        /// considers it acknowledged.
+        /// </summary>
+        public static bool RejectLastRead<T>()
+        {
+            var owner = LastRead<T>.module;
+            if (owner == null || LastRead<T>.frame != Time.frameCount)
+                return false;
+
+            LastRead<T>.module = null;
+
+            if (LastRead<T>.rejectedKeyHash == LastRead<T>.keyHash &&
+                LastRead<T>.rejectedBaselineId == LastRead<T>.baselineId &&
+                LastRead<T>.rejectedValueId == LastRead<T>.valueId)
+                return true;
+
+            LastRead<T>.rejectedKeyHash = LastRead<T>.keyHash;
+            LastRead<T>.rejectedBaselineId = LastRead<T>.baselineId;
+            LastRead<T>.rejectedValueId = LastRead<T>.valueId;
+            owner.RejectRead<T>(LastRead<T>.sender, LastRead<T>.keyHash, LastRead<T>.baselineId, LastRead<T>.valueId);
+            return true;
+        }
+
+        private void RejectRead<T>(PlayerID sender, uint precomputedHash, uint baselineId, uint valueId)
+        {
+            uint keyType = Hasher.GetStableHashU32<T>();
+            var player = _players?.localPlayerId ?? default;
+            var tracker = GetOrCreateTracker<T>(player, precomputedHash, false);
+
+            if (valueId != 0)
+            {
+                WithdrawAcknowledge(sender, keyType, precomputedHash, valueId);
+                tracker.Remove(valueId);
+                SendBaselineMissing(sender, keyType, precomputedHash, valueId);
+            }
+
+            if (baselineId != 0)
+            {
+                tracker.Remove(baselineId);
+                SendBaselineMissing(sender, keyType, precomputedHash, baselineId);
+            }
+        }
+
+        private void WithdrawAcknowledge(PlayerID sender, uint keyType, uint keyHash, uint valueId)
+        {
+            for (int i = 0; i < _acknowledgements.Count; i++)
+            {
+                var batch = _acknowledgements[i];
+                if (batch.playerId != sender)
+                    continue;
+
+                for (int j = 0; j < batch.entries.Count; j++)
+                {
+                    var entry = batch.entries[j];
+                    if (entry.keyType.value == keyType && entry.keyHash.value == keyHash && entry.valueId.value == valueId)
+                    {
+                        batch.entries.RemoveAt(j);
+                        return;
+                    }
+                }
+
+                return;
+            }
+        }
+
+        private void SendBaselineMissing(PlayerID sender, uint keyType, uint keyHash, uint missingId)
+        {
+            if (_broadcaster == null)
+                return;
+
+            var nack = new DeltaBaselineMissing
+            {
+                keyType = keyType,
+                keyHash = keyHash,
+                valueId = missingId
+            };
+
+            if (_asServer)
+                _broadcaster.Send(sender, nack, Channel.ReliableUnordered);
+            else _broadcaster.SendToServer(nack, Channel.ReliableUnordered);
         }
 
         private void RejectMissingBaseline<T>(ClientDeltaTracker tracker, PlayerID sender, uint precomputedHash,

@@ -1,4 +1,5 @@
 using PurrNet.Logging;
+using PurrNet.Modules;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -39,8 +40,11 @@ namespace PurrNet
                    && IsFinite(bodyAngularVelocity);
         }
 
-        private bool ValidateLocalStateForSync(string source)
+        private bool ValidateLocalStateForSync(string source) => ValidateLocalStateForSync(source, out _);
+
+        private bool ValidateLocalStateForSync(string source, out bool zeroVelocities)
         {
+            zeroVelocities = false;
             var parentIdentity = GetSyncParentIdentity(out var isSoftParent);
             var parent = parentIdentity ? parentIdentity.transform : null;
             var localPosition = bodyPosition;
@@ -61,6 +65,12 @@ namespace PurrNet
                           && IsFinite(syncLinearVelocity)
                           && IsFinite(syncAngularVelocity);
             bool packable = IsHalfPackable(syncLinearVelocity) && IsHalfPackable(syncAngularVelocity);
+
+            if (finite && !packable && bodyIsKinematic)
+            {
+                zeroVelocities = true;
+                packable = true;
+            }
 
             if (!finite || !packable)
             {
@@ -143,15 +153,22 @@ namespace PurrNet
                 return true;
             }
 
+            bool resynced = incoming && DeltaModule.RejectLastRead<RigidbodyStateData>();
             bool reported = incoming ? _invalidInboundStateReported : _invalidOutboundStateReported;
             if (!reported)
             {
                 string direction = incoming ? "incoming" : "outgoing";
-                PurrLogger.LogError(
-                    $"Rejected {direction} {GetType().Name} state because it contains {(plausible ? "invalid data" : "implausible velocities (corrupt snapshot)")}.\n" +
+                string message =
+                    $"Rejected {direction} {GetType().Name} state because it contains {(plausible ? "invalid data" : "implausible velocities (corrupt snapshot)")}" +
+                    $"{(resynced ? "; discarded its delta baseline and requested a full resync" : "")}.\n" +
                     $"source={source} {GetNetworkContext(data.parent, data.isSoftParent)}\n" +
                     $"frame={data.positionFrame} position={syncPosition} rotation={rotation} velocity={linearVelocity} angularVelocity={angularVelocity} senderTime={data.time:F6}\n" +
-                    GetCurrentRigidbodyState(), this);
+                    GetCurrentRigidbodyState();
+
+                if (resynced)
+                    PurrLogger.Log(message, this);
+                else
+                    PurrLogger.LogError(message, this);
             }
 
             if (incoming)

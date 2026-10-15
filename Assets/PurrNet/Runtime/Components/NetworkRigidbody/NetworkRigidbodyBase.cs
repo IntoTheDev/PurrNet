@@ -670,8 +670,10 @@ namespace PurrNet
             if (!hasBody)
                 return;
 
-            if (!ValidateLocalStateForSync("state send"))
+            if (!ValidateLocalStateForSync("state send", out bool kinematicTeleport))
                 return;
+
+            zeroVelocities |= kinematicTeleport;
 
             var parentIdentity = GetSyncParentIdentity(out var isSoft);
             var parentTrs = parentIdentity ? parentIdentity.transform : null;
