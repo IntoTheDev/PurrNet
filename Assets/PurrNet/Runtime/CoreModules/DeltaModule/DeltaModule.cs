@@ -19,6 +19,7 @@ namespace PurrNet.Modules
             (typeof(IEquatable<T>).IsAssignableFrom(typeof(T)) || typeof(T).IsEnum);
     }
 
+    [PackerDependencies]
     public class DeltaModule : INetworkModule, IPostFixedUpdate, IPromoteToServerModule
     {
         static readonly ProfilerMarker _writeMarker = new ProfilerMarker("DeltaModule.Write");

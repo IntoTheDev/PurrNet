@@ -46,6 +46,7 @@ namespace PurrNet.Modules
         }
     }
 
+    [PackerDependencies]
     public class GlobalOwnershipModule : INetworkModule, IFixedUpdate, IPreFixedUpdate, IPromoteToServerModule
     {
         readonly PlayersManager _playersManager;
