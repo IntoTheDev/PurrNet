@@ -1,3 +1,10 @@
+## [1.24.2-beta.12](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.11...v1.24.2-beta.12) (2026-10-15)
+
+
+### Bug Fixes
+
+* Steam queue drain fix ([366bbde](https://github.com/PurrNet/PurrNet/commit/366bbdee2b2d13de98d6efb4fe132ec9a5a7b7d5))
+
 ## [1.24.2-beta.11](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.10...v1.24.2-beta.11) (2026-10-15)
 
 
