@@ -23,8 +23,6 @@ namespace PurrNet.Codegen.Tests
             DeltaWriteFunc<Value> deltaWrite = WriteDelta;
             DeltaReadFunc<Value> deltaRead = ReadDelta;
             NativePacker<Value>.RegisterGeneratedWriter(write, Pointer(write));
-            Assert.That(NativePacker<Value>.UsesGeneratedWriter(write), Is.True);
-            Assert.That(NativePacker<Value>.UsesGeneratedWriter((p, v) => p.WriteBits(v.number, 32)), Is.False);
             NativePacker<Value>.RegisterGeneratedReader(read, Pointer(read));
             NativeDeltaPacker<Value>.RegisterGeneratedWriter(deltaWrite, Pointer(deltaWrite));
             NativeDeltaPacker<Value>.RegisterGeneratedReader(deltaRead, Pointer(deltaRead));
@@ -74,7 +72,6 @@ namespace PurrNet.Codegen.Tests
             DeltaWriteFunc<EarlierValue> replacementDelta = WriteReplacementDelta;
             DeltaReadFunc<EarlierValue> replacementDeltaRead = ReadReplacementDelta;
             NativePacker<EarlierValue>.RegisterGeneratedWriter(replacement, Pointer(replacement));
-            Assert.That(NativePacker<EarlierValue>.UsesGeneratedWriter(replacement), Is.False);
             NativePacker<EarlierValue>.RegisterGeneratedReader(replacementRead, Pointer(replacementRead));
             NativeDeltaPacker<EarlierValue>.RegisterGeneratedWriter(replacementDelta, Pointer(replacementDelta));
             NativeDeltaPacker<EarlierValue>.RegisterGeneratedReader(replacementDeltaRead, Pointer(replacementDeltaRead));
@@ -98,32 +95,9 @@ namespace PurrNet.Codegen.Tests
         }
 
         [Test]
-        public void IndependentNativeOverrideIsNotTheGeneratedManagedWriter()
-        {
-            NativePacker<NativeOverrideValue>.RegisterWriter(WriteNativeOverride);
-            WriteFunc<NativeOverrideValue> generated = WriteNativeDefault;
-            NativePacker<NativeOverrideValue>.RegisterGeneratedWriter(generated, Pointer(generated));
-            Packer<NativeOverrideValue>.RegisterWriter(generated);
-            Assert.That(Packer<NativeOverrideValue>.WriteFunc, Is.EqualTo(generated));
-            Assert.That(NativePacker<NativeOverrideValue>.UsesGeneratedWriter(generated), Is.False);
-            using var packer = BitPackerPool.Get();
-            NativePacker<NativeOverrideValue>.Write(packer, new NativeOverrideValue { number = 41 });
-            packer.ResetPositionAndMode(true);
-            Assert.That(packer.ReadBits(32), Is.EqualTo(42UL));
-            packer.ResetPositionAndMode(false);
-            Packer<NativeOverrideValue>.Write(packer, new NativeOverrideValue { number = 41 });
-            packer.ResetPositionAndMode(true);
-            Assert.That(packer.ReadBits(32), Is.EqualTo(41UL));
-        }
-
-        static void WriteNativeDefault(BitPacker packer, NativeOverrideValue value) => packer.WriteBits(value.number, 32);
-        static void WriteNativeOverride(BitPacker packer, NativeOverrideValue value) => packer.WriteBits(value.number + 1, 32);
-
-        [Test]
         public void ReferenceContainingValuesKeepTheirManagedCallbacks()
         {
             NativePacker<ManagedValue>.RegisterGeneratedWriter(WriteManaged, IntPtr.Zero);
-            Assert.That(NativePacker<ManagedValue>.UsesGeneratedWriter(WriteManaged), Is.False);
             NativePacker<ManagedValue>.RegisterGeneratedReader(ReadManaged, IntPtr.Zero);
             NativeDeltaPacker<ManagedValue>.RegisterGeneratedWriter(WriteManagedDelta, IntPtr.Zero);
             NativeDeltaPacker<ManagedValue>.RegisterGeneratedReader(ReadManagedDelta, IntPtr.Zero);
@@ -155,6 +129,25 @@ namespace PurrNet.Codegen.Tests
             NativePacker<GenericValue>.Read(packer, ref actual);
             Assert.That(actual.number, Is.EqualTo(123));
         }
+
+        [Test]
+        public void IndependentNativeOverrideKeepsPriorityOverGeneratedAndManagedRegistration()
+        {
+            NativePacker<NativeOverrideValue>.RegisterWriter(WriteNativeOverride);
+            NativePacker<NativeOverrideValue>.RegisterGeneratedWriter(WriteNativeDefault, Pointer((WriteFunc<NativeOverrideValue>)WriteNativeDefault));
+            Packer<NativeOverrideValue>.RegisterWriter(WriteNativeDefault);
+            using var packer = BitPackerPool.Get();
+            NativePacker<NativeOverrideValue>.Write(packer, new NativeOverrideValue { number = 41 });
+            packer.ResetPositionAndMode(true);
+            Assert.That(packer.ReadBits(32), Is.EqualTo(42UL));
+            packer.ResetPositionAndMode(false);
+            Packer<NativeOverrideValue>.Write(packer, new NativeOverrideValue { number = 41 });
+            packer.ResetPositionAndMode(true);
+            Assert.That(packer.ReadBits(32), Is.EqualTo(41UL));
+        }
+
+        static void WriteNativeDefault(BitPacker packer, NativeOverrideValue value) => packer.WriteBits(value.number, 32);
+        static void WriteNativeOverride(BitPacker packer, NativeOverrideValue value) => packer.WriteBits(value.number + 1, 32);
 
         static void Write(BitPacker packer, Value value) => packer.WriteBits(value.number, 32);
         static void Read(BitPacker packer, ref Value value) => value.number = (uint)packer.ReadBits(32);

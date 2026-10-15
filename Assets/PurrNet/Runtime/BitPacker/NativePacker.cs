@@ -8,7 +8,6 @@ namespace PurrNet.Packing
     {
         public static unsafe delegate*<BitPacker, T, void> WriteFunc;
         public static unsafe delegate*<BitPacker, ref T, void> ReadFunc;
-        private static unsafe delegate*<BitPacker, T, void> _generatedWriter;
 
         static bool _hasWriter, _hasReader;
 
@@ -25,13 +24,6 @@ namespace PurrNet.Packing
         {
             return _hasWriter && _hasReader;
         }
-
-        // Composed serializers use native field codecs. Consumers caching their complete
-        // output must detect independent native overrides as well as managed registration.
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe bool UsesGeneratedWriter(WriteFunc<T> writer)
-            => _generatedWriter != null && WriteFunc == _generatedWriter &&
-               (ReferenceEquals(_writeDelegate, writer) || _writeDelegate == writer);
 
         static void WriteDelegateFallback(BitPacker packer, T value)
         {
@@ -73,9 +65,7 @@ namespace PurrNet.Packing
         {
             if (_hasWriter || RuntimeHelpers.IsReferenceOrContainsReferences<T>())
                 return;
-            _writeDelegate = write;
-            _generatedWriter = (delegate*<BitPacker, T, void>)(void*)pointer;
-            RegisterWriterWithPointer(_generatedWriter);
+            RegisterWriterWithPointer((delegate*<BitPacker, T, void>)(void*)pointer);
         }
 
         static unsafe void RegisterWriterWithPointer(delegate*<BitPacker, T, void> ptr)
