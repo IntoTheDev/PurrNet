@@ -135,6 +135,21 @@ namespace PurrNet.Codegen.Tests
         }
 
         [Test]
+        public void ExplicitCodecDependenciesDoNotHideNetworkModulePayloads()
+        {
+            var constructor = typeof(PackerDependenciesAttribute).GetConstructor(new[] { typeof(Type[]) });
+            var attribute = new CustomAttribute(_module.ImportReference(constructor));
+            attribute.ConstructorArguments.Add(new CustomAttributeArgument(_module.ImportReference(typeof(Type[])),
+                Array.Empty<CustomAttributeArgument>()));
+            _holder.CustomAttributes.Add(attribute);
+            var cell = GenericType("NetworkCell");
+            cell.BaseType = _networkModule;
+            var closedCell = Close(cell, _module.TypeSystem.String);
+            _holder.Fields.Add(new FieldDefinition("State", FieldAttributes.Private, closedCell));
+            AssertTypes(Discover(), closedCell, _module.TypeSystem.String);
+        }
+
+        [Test]
         public void OrdinaryCallsAndNongenericFieldsDoNotResolveUnrelatedDependencies()
         {
             var unrelated = new CountingMethodReference("Ordinary", _module.TypeSystem.Void, _holder,

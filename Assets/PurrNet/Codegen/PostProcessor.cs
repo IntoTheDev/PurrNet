@@ -4984,10 +4984,31 @@ namespace PurrNet.Codegen
         {
             List<TypeReference> concreteFields = new List<TypeReference>();
 
+            var definition = typeReference.Resolve();
+            var dependencies = definition?.CustomAttributes.FirstOrDefault(attribute =>
+                attribute.AttributeType.FullName == typeof(PackerDependenciesAttribute).FullName);
+            if (dependencies != null)
+            {
+                if (typeReference is ArrayType array)
+                {
+                    concreteFields.Add(array.ElementType);
+                    return concreteFields;
+                }
+                if (typeReference is GenericInstanceType declaredGeneric)
+                    concreteFields.AddRange(declaredGeneric.GenericArguments);
+                if (dependencies.ConstructorArguments.Count > 0 &&
+                    dependencies.ConstructorArguments[0].Value is CustomAttributeArgument[] declared)
+                {
+                    foreach (var dependency in declared)
+                        if (dependency.Value is TypeReference type) concreteFields.Add(type);
+                }
+                return concreteFields;
+            }
+
             if (typeReference is GenericInstanceType genericInstance)
             {
                 // Resolve the type definition
-                TypeDefinition typeDef = typeReference.Resolve();
+                TypeDefinition typeDef = definition;
                 if (typeDef == null)
                 {
                     throw new InvalidOperationException($"Could not resolve type: {typeReference.FullName}");
@@ -5014,7 +5035,7 @@ namespace PurrNet.Codegen
             }
             else
             {
-                TypeDefinition typeDef = typeReference.Resolve();
+                TypeDefinition typeDef = definition;
 
                 if (typeDef != null)
                 {

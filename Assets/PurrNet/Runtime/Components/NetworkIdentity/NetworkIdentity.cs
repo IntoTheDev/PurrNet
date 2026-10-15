@@ -13,6 +13,7 @@ namespace PurrNet
     public delegate void NidParentChanged(NetworkIdentity oldParent, NetworkIdentity newParent);
 
     [DefaultExecutionOrder(-1000)]
+    [PackerDependencies(typeof(NetworkID), typeof(SceneID))]
     public partial class NetworkIdentity : MonoBehaviour
     {
         [SerializeField, HideInInspector] private bool _isSetup;

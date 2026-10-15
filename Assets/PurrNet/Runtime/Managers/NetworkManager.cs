@@ -24,6 +24,7 @@ namespace PurrNet
 
     [DefaultExecutionOrder(-999)]
     [AddComponentMenu("PurrNet/Network Manager")]
+    [PackerDependencies]
     public sealed partial class NetworkManager : MonoBehaviour, IRegisterModules, INetworkManager
     {
         /// <summary>
