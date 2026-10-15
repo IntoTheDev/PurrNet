@@ -58,6 +58,29 @@ namespace PurrNet.Tests
             }
         }
 
+        [Test]
+        public void WritesPreserveExistingBitsAroundTheEncodedValue()
+        {
+            foreach (ulong value in new ulong[] { 0, 127, 128, 16383, 16384, 1UL << 56, 1UL << 63, ulong.MaxValue })
+            for (int origin = 0; origin < 8; origin++)
+            {
+                using var expected = BitPackerPool.Get();
+                using var actual = BitPackerPool.Get();
+                for (int block = 0; block < 3; block++)
+                {
+                    expected.WriteBits(0xA5A5A5A5A5A5A5A5UL, 64);
+                    actual.WriteBits(0xA5A5A5A5A5A5A5A5UL, 64);
+                }
+                expected.SetBitPosition(origin);
+                actual.SetBitPosition(origin);
+                WriteLegacy(value, expected);
+                PackingIntegers.Write(actual, new PackedULong(value));
+                Assert.That(actual.positionInBits, Is.EqualTo(expected.positionInBits));
+                Assert.That(new BitData(actual, 0, 192).Equals(new BitData(expected, 0, 192)), Is.True,
+                    $"value {value}, origin {origin}");
+            }
+        }
+
         private static void Check(ulong value, int origin)
         {
             using var expected = BitPackerPool.Get();
