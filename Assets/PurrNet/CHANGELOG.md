@@ -1,3 +1,10 @@
+## [1.24.2-beta.14](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.13...v1.24.2-beta.14) (2026-10-15)
+
+
+### Bug Fixes
+
+* Delta memory key and baseline decode ([4e2786c](https://github.com/PurrNet/PurrNet/commit/4e2786c9fe1d9f870089ce0431011c6829e7494b))
+
 ## [1.24.2-beta.13](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.12...v1.24.2-beta.13) (2026-10-15)
 
 
