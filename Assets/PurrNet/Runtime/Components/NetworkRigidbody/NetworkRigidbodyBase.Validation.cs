@@ -9,6 +9,16 @@ namespace PurrNet
         private const float HalfVectorMax = 65504f;
         private const float HalfVectorWarningThreshold = HalfVectorMax * 0.5f;
 
+        /// <summary>
+        /// Incoming snapshots whose linear speed (units per second) exceeds this are rejected as corrupt.
+        /// </summary>
+        public static float maxPlausibleLinearSpeed = 10000f;
+
+        /// <summary>
+        /// Incoming snapshots whose angular speed exceeds this are rejected as corrupt (radians per second in 3D, degrees per second in 2D).
+        /// </summary>
+        public static float maxPlausibleAngularSpeed = 10000f;
+
         private bool _invalidOutboundStateReported;
         private bool _invalidInboundStateReported;
         private bool _invalidCorrectionStateReported;
@@ -119,6 +129,10 @@ namespace PurrNet
                          && IsFinite(linearVelocity)
                          && IsFinite(angularVelocity)
                          && IsFinite(data.time);
+            bool plausible = !valid || !incoming
+                             || (linearVelocity.sqrMagnitude <= maxPlausibleLinearSpeed * maxPlausibleLinearSpeed
+                                 && angularVelocity.sqrMagnitude <= maxPlausibleAngularSpeed * maxPlausibleAngularSpeed);
+            valid &= plausible;
 
             if (valid)
             {
@@ -134,7 +148,7 @@ namespace PurrNet
             {
                 string direction = incoming ? "incoming" : "outgoing";
                 PurrLogger.LogError(
-                    $"Rejected {direction} {GetType().Name} state because it contains invalid data.\n" +
+                    $"Rejected {direction} {GetType().Name} state because it contains {(plausible ? "invalid data" : "implausible velocities (corrupt snapshot)")}.\n" +
                     $"source={source} {GetNetworkContext(data.parent, data.isSoftParent)}\n" +
                     $"frame={data.positionFrame} position={syncPosition} rotation={rotation} velocity={linearVelocity} angularVelocity={angularVelocity} senderTime={data.time:F6}\n" +
                     GetCurrentRigidbodyState(), this);
