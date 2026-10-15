@@ -410,6 +410,7 @@ namespace PurrNet
         /// </summary>
         public PlayerID? localPlayer
         {
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
             get
             {
                 if (_localPlayer.HasValue)
