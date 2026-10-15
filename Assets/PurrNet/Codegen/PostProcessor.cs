@@ -4360,6 +4360,9 @@ namespace PurrNet.Codegen
                             typesToIgnoreForSerialization, typesToIgnoreForDelta);
                 }
 
+                if (HasPurrNetAsReference(compiledAssembly.Name, assemblyDefinition.MainModule))
+                    GenerateDerivedTypeIndex.Generate(assemblyDefinition, typeof(PlayerIdentity<>),
+                        DerivedTypeDiscovery.PlayerIdentityIndexTypeName);
                 GenerateRegistrationIndex.Generate(assemblyDefinition);
 
                 var pe = new MemoryStream();

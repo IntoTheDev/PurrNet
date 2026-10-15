@@ -28,7 +28,8 @@ namespace PurrNet
                 {
                     try
                     {
-                        return a.GetTypes();
+                        return DerivedTypeDiscovery.ReadIndex(a, DerivedTypeDiscovery.PlayerIdentityIndexTypeName) ??
+                               a.GetTypes();
                     }
                     catch (ReflectionTypeLoadException ex)
                     {
