@@ -21,6 +21,7 @@ namespace PurrNet.Steam
         internal const int MaxQueuedBytes = 1024 * 1024;
         internal const int MaxQueuedMessages = 1024;
         internal const double MaxQueueAgeSeconds = 10;
+        internal const double MaxCountedCheckGapSeconds = 0.5;
 
         internal delegate EResult NativeSend(IntPtr data, uint length, int flags);
 
@@ -28,6 +29,9 @@ namespace PurrNet.Steam
         private readonly Func<double> _clock;
         private readonly Queue<PendingMessage> _pending = new Queue<PendingMessage>();
         private SteamSendStatistics _statistics;
+        private double _blockedSeconds;
+        private double _longestCheckGap;
+        private double _lastCheckAt;
 
         private readonly struct PendingMessage
         {
@@ -157,8 +161,25 @@ namespace PurrNet.Steam
         {
             if (failureReason != null)
                 return false;
-            if (_pending.Count > 0 && _clock() - _pending.Peek().queuedAt >= MaxQueueAgeSeconds)
-                return Fail("Steam did not accept a queued reliable message within 10 seconds.");
+
+            double now = _clock();
+            if (_pending.Count == 0)
+            {
+                _blockedSeconds = 0;
+                _longestCheckGap = 0;
+                _lastCheckAt = now;
+                return true;
+            }
+
+            double gap = now - _lastCheckAt;
+            _lastCheckAt = now;
+            if (gap > _longestCheckGap)
+                _longestCheckGap = gap;
+            _blockedSeconds += Math.Min(gap, MaxCountedCheckGapSeconds);
+
+            if (_blockedSeconds >= MaxQueueAgeSeconds)
+                return Fail($"Steam did not accept a queued reliable message within {MaxQueueAgeSeconds:0} seconds of sending " +
+                            $"(oldest queued {now - _pending.Peek().queuedAt:0.#} s ago, longest gap between sends {_longestCheckGap:0.##} s).");
             return true;
         }
 
