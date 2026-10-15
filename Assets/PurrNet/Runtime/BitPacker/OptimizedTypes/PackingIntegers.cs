@@ -177,13 +177,11 @@ namespace PurrNet.Packing
 
                 if (uvalue == 0)
                 {
-                    packer.WriteBits(chunk, 7);
-                    packer.WriteBits(0, 1);
+                    packer.WriteBits(chunk, 8);
                     break;
                 }
 
-                packer.WriteBits(chunk, 7);
-                packer.WriteBits(1, 1);
+                packer.WriteBits(chunk | 0x80UL, 8);
             }
         }
 
@@ -195,9 +193,9 @@ namespace PurrNet.Packing
 
             while (shift < 64)
             {
-                ulong chunk = packer.ReadBits(7);
-                bool cont = packer.ReadBits(1) == 1;
-                result |= chunk << shift;
+                ulong chunk = packer.ReadBits(8);
+                bool cont = (chunk & 0x80UL) != 0;
+                result |= (chunk & 0x7FUL) << shift;
                 shift += 7;
 
                 if (!cont) break;
