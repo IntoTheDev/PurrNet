@@ -1,3 +1,10 @@
+## [1.24.2-beta.13](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.12...v1.24.2-beta.13) (2026-10-15)
+
+
+### Bug Fixes
+
+* NT absolute position memory ([1b43675](https://github.com/PurrNet/PurrNet/commit/1b43675b795ceb1724fb9a656fe6b2a0ecafa204))
+
 ## [1.24.2-beta.12](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.11...v1.24.2-beta.12) (2026-10-15)
 
 
