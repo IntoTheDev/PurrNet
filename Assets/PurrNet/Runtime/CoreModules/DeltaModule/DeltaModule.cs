@@ -791,6 +791,8 @@ namespace PurrNet.Modules
                 cachedKey = valueId;
 
                 tracker.Set(valueId, newValue);
+                if (lastConfirmedId == 0)
+                    tracker.awaitingResync = false;
 
                 var data = new DeltaAcknowledge
                 {
@@ -865,18 +867,17 @@ namespace PurrNet.Modules
             var player = _players?.localPlayerId ?? default;
             var tracker = GetOrCreateTracker<T>(player, precomputedHash, false);
 
+            tracker.CleanupUpTo(uint.MaxValue);
+            tracker.awaitingResync = true;
+
             if (valueId != 0)
             {
                 WithdrawAcknowledge(sender, keyType, precomputedHash, valueId);
-                tracker.Remove(valueId);
                 SendBaselineMissing(sender, keyType, precomputedHash, valueId);
             }
 
             if (baselineId != 0)
-            {
-                tracker.Remove(baselineId);
                 SendBaselineMissing(sender, keyType, precomputedHash, baselineId);
-            }
         }
 
         private void WithdrawAcknowledge(PlayerID sender, uint keyType, uint keyHash, uint valueId)
@@ -921,7 +922,7 @@ namespace PurrNet.Modules
         private void RejectMissingBaseline<T>(ClientDeltaTracker tracker, PlayerID sender, uint precomputedHash,
             uint missingId, PlayerID player)
         {
-            if (tracker.reportedMissingId != missingId)
+            if (!tracker.awaitingResync && tracker.reportedMissingId != missingId)
             {
                 tracker.reportedMissingId = missingId;
                 PurrLogger.LogError(
