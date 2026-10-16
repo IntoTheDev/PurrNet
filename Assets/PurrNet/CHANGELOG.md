@@ -1,3 +1,10 @@
+# [1.25.0-beta.1](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.16...v1.25.0-beta.1) (2026-10-16)
+
+
+### Features
+
+* expose HierarchyPool.Warmup(PrefabData) for on-demand warmup ([1803bbf](https://github.com/PurrNet/PurrNet/commit/1803bbf12a1c4c721031bc2b52ed65c857d6eb5c))
+
 ## [1.24.2-beta.16](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.15...v1.24.2-beta.16) (2026-10-16)
 
 
