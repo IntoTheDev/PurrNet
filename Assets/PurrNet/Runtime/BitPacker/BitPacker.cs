@@ -210,6 +210,8 @@ namespace PurrNet.Packing
                 EnsureBitsExist(1);
         }
 
+        // Every read and write checks its bits; the throw and the resize live out of line so
+        // the check itself stays small enough to inline.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void EnsureBitsExist(int bits)
         {
@@ -219,16 +221,24 @@ namespace PurrNet.Packing
             if (_isReading)
             {
                 if (requiredBytes > _buffer.Length)
-                    throw new IndexOutOfRangeException($"Not enough bits in the buffer. | {targetPos} > {_buffer.Length << 3}");
+                    ThrowNotEnoughBits(targetPos);
                 return;
             }
 
             requiredBytes += 8;
             if (requiredBytes > _buffer.Length)
-            {
-                int newSize = Math.Max(_buffer.Length * 2, requiredBytes);
-                Array.Resize(ref _buffer, newSize);
-            }
+                GrowBuffer(requiredBytes);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ThrowNotEnoughBits(int targetPos)
+            => throw new IndexOutOfRangeException($"Not enough bits in the buffer. | {targetPos} > {_buffer.Length << 3}");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void GrowBuffer(int requiredBytes)
+        {
+            int newSize = Math.Max(_buffer.Length * 2, requiredBytes);
+            Array.Resize(ref _buffer, newSize);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -238,15 +248,17 @@ namespace PurrNet.Packing
             int bufferBitSize = _buffer.Length * 8;
 
             if (targetPos > bufferBitSize)
-            {
-                if (_isReading)
-                    throw new IndexOutOfRangeException("Not enough bits in the buffer. | " + targetPos + " > " +
-                                                       bufferBitSize);
+                EnsureBitsExistSlow(targetPos, bufferBitSize);
+        }
 
-                int requiredBytes = ((targetPos + 7) >> 3) + 8;
-                int newSize = Math.Max(_buffer.Length * 2, requiredBytes);
-                Array.Resize(ref _buffer, newSize);
-            }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void EnsureBitsExistSlow(int targetPos, int bufferBitSize)
+        {
+            if (_isReading)
+                throw new IndexOutOfRangeException("Not enough bits in the buffer. | " + targetPos + " > " +
+                                                   bufferBitSize);
+
+            GrowBuffer(((targetPos + 7) >> 3) + 8);
         }
 
         [UsedByIL]
