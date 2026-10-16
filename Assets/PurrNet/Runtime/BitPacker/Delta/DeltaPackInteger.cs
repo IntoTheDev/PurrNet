@@ -6,7 +6,6 @@ namespace PurrNet.Packing
     {
         static readonly byte[] buckets8 = { 2, 4, 6, 8 };
         static readonly byte[] buckets16 = { 4, 8, 12, 16 };
-        static readonly byte[] buckets32 = { 4, 8, 16, 32 };
         static readonly byte[] buckets64 = { 4, 8, 24, 64 };
 
         static void WriteChangedDiff(BitPacker packer, ulong zigzag, byte[] buckets)
@@ -23,6 +22,51 @@ namespace PurrNet.Packing
             }
             else
                 packer.WriteBits((zigzag << 3) | prefix, (byte)(payloadBits + 3));
+        }
+
+        // The 32-bit widths 4, 8, 16 and 32 as constants: every 32-bit field of every delta-packed struct
+        // comes through here, and the table lookup and its search cost more than the write.
+        static void WriteChangedDiff32(BitPacker packer, ulong zigzag)
+        {
+            int bits = 64 - PackingIntegers.CountLeadingZeroBits(zigzag);
+            ulong selector;
+            byte payloadBits;
+            if (bits <= 4) { selector = 0; payloadBits = 4; }
+            else if (bits <= 8) { selector = 1; payloadBits = 8; }
+            else if (bits <= 16) { selector = 2; payloadBits = 16; }
+            else { selector = 3; payloadBits = 32; }
+            packer.WriteBits((zigzag << 3) | 1UL | (selector << 1), (byte)(payloadBits + 3));
+        }
+
+        static int Bucket32(int selector) => selector switch { 0 => 4, 1 => 8, 2 => 16, _ => 32 };
+
+        static bool ReadChangedDiff32(BitPacker packer, out ulong diff)
+        {
+            const int widestBits = 3 + 32;
+            if (packer.HasReadableBits(widestBits))
+            {
+                ulong word = packer.PeekBitsWithoutChecks(widestBits);
+                if ((word & 1) == 0)
+                {
+                    packer.SkipBitsWithoutChecks(1);
+                    diff = 0;
+                    return false;
+                }
+
+                int payloadBits = Bucket32((int)(word >> 1) & 3);
+                diff = (word >> 3) & ((1UL << payloadBits) - 1);
+                packer.SkipBitsWithoutChecks(3 + payloadBits);
+                return true;
+            }
+
+            if (!packer.ReadBit())
+            {
+                diff = 0;
+                return false;
+            }
+
+            diff = packer.ReadBits((byte)Bucket32((int)packer.ReadBits(2)));
+            return true;
         }
 
         static ulong ReadDiff(BitPacker packer, byte[] buckets)
@@ -182,14 +226,14 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode(newvalue - oldvalue), buckets32);
+            WriteChangedDiff32(packer, PackingIntegers.ZigzagEncode(newvalue - oldvalue));
             return true;
         }
 
         [UsedByIL]
         public static void ReadInt32(BitPacker packer, int oldvalue, ref int value)
         {
-            if (ReadChangedDiff(buckets32, packer, out ulong zigzag))
+            if (ReadChangedDiff32(packer, out ulong zigzag))
             {
                 int diff = PackingIntegers.ZigzagDecode((uint)zigzag);
                 value = oldvalue + diff;
@@ -206,14 +250,14 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode((int)(newvalue - oldvalue)), buckets32);
+            WriteChangedDiff32(packer, PackingIntegers.ZigzagEncode((int)(newvalue - oldvalue)));
             return true;
         }
 
         [UsedByIL]
         public static void ReadUInt32(BitPacker packer, uint oldvalue, ref uint value)
         {
-            if (ReadChangedDiff(buckets32, packer, out ulong zigzag))
+            if (ReadChangedDiff32(packer, out ulong zigzag))
             {
                 int diff = PackingIntegers.ZigzagDecode((uint)zigzag);
                 value = (uint)(oldvalue + diff);
