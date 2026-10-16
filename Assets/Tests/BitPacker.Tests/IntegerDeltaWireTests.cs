@@ -26,6 +26,49 @@ namespace PurrNet.Tests
             CheckType<ulong>(origin, 64, x => x, x => x, DeltaPackInteger.WriteUInt64, DeltaPackInteger.ReadUInt64);
         }
 
+        [Test]
+        public void ValuesEndingAtTheBufferEdgeDecodeFromTheirExactBytes()
+        {
+            var random = new Random(7);
+            var baselines = new int[96];
+            var values = new int[96];
+            var shortBaselines = new short[96];
+            var shortValues = new short[96];
+            for (int i = 0; i < values.Length; i++)
+            {
+                baselines[i] = random.Next(int.MinValue, int.MaxValue);
+                values[i] = (i % 3) switch
+                {
+                    0 => baselines[i],
+                    1 => unchecked(baselines[i] + random.Next(-20, 20)),
+                    _ => random.Next(int.MinValue, int.MaxValue)
+                };
+                shortBaselines[i] = (short)random.Next(short.MinValue, short.MaxValue);
+                shortValues[i] = i % 2 == 0 ? shortBaselines[i] : (short)random.Next(short.MinValue, short.MaxValue);
+            }
+
+            using var writer = BitPackerPool.Get();
+            for (int i = 0; i < values.Length; i++)
+            {
+                DeltaPackInteger.WriteInt32(writer, baselines[i], values[i]);
+                DeltaPackInteger.WriteInt16(writer, shortBaselines[i], shortValues[i]);
+            }
+
+            var bytes = new byte[writer.positionInBytes];
+            Array.Copy(writer.buffer, bytes, bytes.Length);
+            using var reader = BitPackerPool.Get(bytes);
+            for (int i = 0; i < values.Length; i++)
+            {
+                int decoded = 0;
+                short decodedShort = 0;
+                DeltaPackInteger.ReadInt32(reader, baselines[i], ref decoded);
+                DeltaPackInteger.ReadInt16(reader, shortBaselines[i], ref decodedShort);
+                Assert.That(decoded, Is.EqualTo(values[i]), $"int {i}");
+                Assert.That(decodedShort, Is.EqualTo(shortValues[i]), $"short {i}");
+            }
+            Assert.That(reader.positionInBits, Is.EqualTo(writer.positionInBits));
+        }
+
         static void CheckType<T>(int origin, int width, Func<ulong, T> fromBits, Func<T, ulong> toBits,
             DeltaWriteFunc<T> write, DeltaReadFunc<T> read) where T : struct
         {

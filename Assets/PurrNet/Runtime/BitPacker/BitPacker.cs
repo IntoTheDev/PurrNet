@@ -509,6 +509,24 @@ namespace PurrNet.Packing
             return data;
         }
 
+        /// <summary>
+        /// True when a reader can take <paramref name="bits"/> more bits without running past the buffer.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal bool HasReadableBits(int bits) => _isReading && _positionInBits + bits <= _buffer.Length << 3;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal ulong PeekBitsWithoutChecks(byte bits)
+        {
+            int position = _positionInBits;
+            ulong value = ReadBitsWithoutChecks(bits);
+            _positionInBits = position;
+            return value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void SkipBitsWithoutChecks(int bits) => _positionInBits += bits;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe bool ReadBit()
         {

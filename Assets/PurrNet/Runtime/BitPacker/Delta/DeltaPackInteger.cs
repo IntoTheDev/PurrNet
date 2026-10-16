@@ -31,6 +31,37 @@ namespace PurrNet.Packing
             return packer.ReadBits(buckets[selector]);
         }
 
+        // Reads the changed flag, bucket selector and payload with one buffer access when the
+        // widest encoding fits in a word; otherwise falls back to reading them one by one.
+        static bool ReadChangedDiff(byte[] buckets, BitPacker packer, out ulong diff)
+        {
+            int widestBits = 3 + buckets[3];
+            if (widestBits <= 64 && packer.HasReadableBits(widestBits))
+            {
+                ulong word = packer.PeekBitsWithoutChecks((byte)widestBits);
+                if ((word & 1) == 0)
+                {
+                    packer.SkipBitsWithoutChecks(1);
+                    diff = 0;
+                    return false;
+                }
+
+                int payloadBits = buckets[(int)(word >> 1) & 3];
+                diff = (word >> 3) & ((1UL << payloadBits) - 1);
+                packer.SkipBitsWithoutChecks(3 + payloadBits);
+                return true;
+            }
+
+            if (!packer.ReadBit())
+            {
+                diff = 0;
+                return false;
+            }
+
+            diff = ReadDiff(packer, buckets);
+            return true;
+        }
+
         [UsedByIL]
         public static bool WriteBool(BitPacker packer, bool oldvalue, bool newvalue)
         {
@@ -62,9 +93,9 @@ namespace PurrNet.Packing
         [UsedByIL]
         public static void ReadInt8(BitPacker packer, sbyte oldvalue, ref sbyte value)
         {
-            if (packer.ReadBit())
+            if (ReadChangedDiff(buckets8, packer, out ulong zigzag))
             {
-                sbyte diff = PackingIntegers.ZigzagDecode((byte)ReadDiff(packer, buckets8));
+                sbyte diff = PackingIntegers.ZigzagDecode((byte)zigzag);
                 value = (sbyte)(oldvalue + diff);
             }
             else value = oldvalue;
@@ -86,9 +117,9 @@ namespace PurrNet.Packing
         [UsedByIL]
         public static void ReadUInt8(BitPacker packer, byte oldvalue, ref byte value)
         {
-            if (packer.ReadBit())
+            if (ReadChangedDiff(buckets8, packer, out ulong zigzag))
             {
-                sbyte diff = PackingIntegers.ZigzagDecode((byte)ReadDiff(packer, buckets8));
+                sbyte diff = PackingIntegers.ZigzagDecode((byte)zigzag);
                 value = (byte)(oldvalue + diff);
             }
             else value = oldvalue;
@@ -110,9 +141,9 @@ namespace PurrNet.Packing
         [UsedByIL]
         public static void ReadInt16(BitPacker packer, short oldvalue, ref short value)
         {
-            if (packer.ReadBit())
+            if (ReadChangedDiff(buckets16, packer, out ulong zigzag))
             {
-                short diff = PackingIntegers.ZigzagDecode((ushort)ReadDiff(packer, buckets16));
+                short diff = PackingIntegers.ZigzagDecode((ushort)zigzag);
                 value = (short)(oldvalue + diff);
             }
             else value = oldvalue;
@@ -134,9 +165,9 @@ namespace PurrNet.Packing
         [UsedByIL]
         public static void ReadUInt16(BitPacker packer, ushort oldvalue, ref ushort value)
         {
-            if (packer.ReadBit())
+            if (ReadChangedDiff(buckets16, packer, out ulong zigzag))
             {
-                short diff = PackingIntegers.ZigzagDecode((ushort)ReadDiff(packer, buckets16));
+                short diff = PackingIntegers.ZigzagDecode((ushort)zigzag);
                 value = (ushort)(oldvalue + diff);
             }
             else value = oldvalue;
@@ -158,9 +189,9 @@ namespace PurrNet.Packing
         [UsedByIL]
         public static void ReadInt32(BitPacker packer, int oldvalue, ref int value)
         {
-            if (packer.ReadBit())
+            if (ReadChangedDiff(buckets32, packer, out ulong zigzag))
             {
-                int diff = PackingIntegers.ZigzagDecode((uint)ReadDiff(packer, buckets32));
+                int diff = PackingIntegers.ZigzagDecode((uint)zigzag);
                 value = oldvalue + diff;
             }
             else value = oldvalue;
@@ -182,9 +213,9 @@ namespace PurrNet.Packing
         [UsedByIL]
         public static void ReadUInt32(BitPacker packer, uint oldvalue, ref uint value)
         {
-            if (packer.ReadBit())
+            if (ReadChangedDiff(buckets32, packer, out ulong zigzag))
             {
-                int diff = PackingIntegers.ZigzagDecode((uint)ReadDiff(packer, buckets32));
+                int diff = PackingIntegers.ZigzagDecode((uint)zigzag);
                 value = (uint)(oldvalue + diff);
             }
             else value = oldvalue;
