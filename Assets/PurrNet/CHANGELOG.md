@@ -1,3 +1,10 @@
+## [1.24.2-beta.16](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.15...v1.24.2-beta.16) (2026-10-16)
+
+
+### Bug Fixes
+
+* Network Rigidbody safety ([0c5da80](https://github.com/PurrNet/PurrNet/commit/0c5da808a5336651c05ec44ade7a98de4e1bef57))
+
 ## [1.24.2-beta.15](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.14...v1.24.2-beta.15) (2026-10-16)
 
 
