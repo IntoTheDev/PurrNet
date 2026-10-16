@@ -26,7 +26,8 @@ namespace PurrNet.Packing
 
         // The 32-bit widths 4, 8, 16 and 32 as constants: every 32-bit field of every delta-packed struct
         // comes through here, and the table lookup and its search cost more than the write.
-        static void WriteChangedDiff32(BitPacker packer, ulong zigzag)
+        // The packer is not the first parameter, or codegen would take this for the ulong serializer.
+        static void WriteChangedDiff32(ulong zigzag, BitPacker packer)
         {
             int bits = 64 - PackingIntegers.CountLeadingZeroBits(zigzag);
             ulong selector;
@@ -40,7 +41,7 @@ namespace PurrNet.Packing
 
         static int Bucket32(int selector) => selector switch { 0 => 4, 1 => 8, 2 => 16, _ => 32 };
 
-        static bool ReadChangedDiff32(BitPacker packer, out ulong diff)
+        static bool ReadChangedDiff32(out ulong diff, BitPacker packer)
         {
             const int widestBits = 3 + 32;
             if (packer.HasReadableBits(widestBits))
@@ -226,14 +227,14 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            WriteChangedDiff32(packer, PackingIntegers.ZigzagEncode(newvalue - oldvalue));
+            WriteChangedDiff32(PackingIntegers.ZigzagEncode(newvalue - oldvalue), packer);
             return true;
         }
 
         [UsedByIL]
         public static void ReadInt32(BitPacker packer, int oldvalue, ref int value)
         {
-            if (ReadChangedDiff32(packer, out ulong zigzag))
+            if (ReadChangedDiff32(out ulong zigzag, packer))
             {
                 int diff = PackingIntegers.ZigzagDecode((uint)zigzag);
                 value = oldvalue + diff;
@@ -250,14 +251,14 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            WriteChangedDiff32(packer, PackingIntegers.ZigzagEncode((int)(newvalue - oldvalue)));
+            WriteChangedDiff32(PackingIntegers.ZigzagEncode((int)(newvalue - oldvalue)), packer);
             return true;
         }
 
         [UsedByIL]
         public static void ReadUInt32(BitPacker packer, uint oldvalue, ref uint value)
         {
-            if (ReadChangedDiff32(packer, out ulong zigzag))
+            if (ReadChangedDiff32(out ulong zigzag, packer))
             {
                 int diff = PackingIntegers.ZigzagDecode((uint)zigzag);
                 value = (uint)(oldvalue + diff);
