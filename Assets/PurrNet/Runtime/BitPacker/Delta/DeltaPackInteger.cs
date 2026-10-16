@@ -9,13 +9,20 @@ namespace PurrNet.Packing
         static readonly byte[] buckets32 = { 4, 8, 16, 32 };
         static readonly byte[] buckets64 = { 4, 8, 24, 64 };
 
-        static void WriteDiff(BitPacker packer, ulong zigzag, byte[] buckets)
+        static void WriteChangedDiff(BitPacker packer, ulong zigzag, byte[] buckets)
         {
             int bits = 64 - PackingIntegers.CountLeadingZeroBits(zigzag);
             int selector = 0;
             while (bits > buckets[selector]) selector++;
-            packer.WriteBits((ulong)selector, 2);
-            packer.WriteBits(zigzag, buckets[selector]);
+            ulong prefix = 1UL | ((ulong)selector << 1);
+            byte payloadBits = buckets[selector];
+            if (payloadBits == 64)
+            {
+                packer.WriteBits((zigzag << 3) | prefix, 64);
+                packer.WriteBits(zigzag >> 61, 3);
+            }
+            else
+                packer.WriteBits((zigzag << 3) | prefix, (byte)(payloadBits + 3));
         }
 
         static ulong ReadDiff(BitPacker packer, byte[] buckets)
@@ -48,8 +55,7 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            packer.WriteBit(true);
-            WriteDiff(packer, PackingIntegers.ZigzagEncode((sbyte)(newvalue - oldvalue)), buckets8);
+            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode((sbyte)(newvalue - oldvalue)), buckets8);
             return true;
         }
 
@@ -73,8 +79,7 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            packer.WriteBit(true);
-            WriteDiff(packer, PackingIntegers.ZigzagEncode((sbyte)(newvalue - oldvalue)), buckets8);
+            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode((sbyte)(newvalue - oldvalue)), buckets8);
             return true;
         }
 
@@ -98,8 +103,7 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            packer.WriteBit(true);
-            WriteDiff(packer, PackingIntegers.ZigzagEncode((short)(newvalue - oldvalue)), buckets16);
+            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode((short)(newvalue - oldvalue)), buckets16);
             return true;
         }
 
@@ -123,8 +127,7 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            packer.WriteBit(true);
-            WriteDiff(packer, PackingIntegers.ZigzagEncode((short)(newvalue - oldvalue)), buckets16);
+            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode((short)(newvalue - oldvalue)), buckets16);
             return true;
         }
 
@@ -148,8 +151,7 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            packer.WriteBit(true);
-            WriteDiff(packer, PackingIntegers.ZigzagEncode(newvalue - oldvalue), buckets32);
+            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode(newvalue - oldvalue), buckets32);
             return true;
         }
 
@@ -173,8 +175,7 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            packer.WriteBit(true);
-            WriteDiff(packer, PackingIntegers.ZigzagEncode((int)(newvalue - oldvalue)), buckets32);
+            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode((int)(newvalue - oldvalue)), buckets32);
             return true;
         }
 
@@ -198,8 +199,7 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            packer.WriteBit(true);
-            WriteDiff(packer, PackingIntegers.ZigzagEncode(newvalue - oldvalue), buckets64);
+            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode(newvalue - oldvalue), buckets64);
             return true;
         }
 
@@ -223,8 +223,7 @@ namespace PurrNet.Packing
                 return false;
             }
 
-            packer.WriteBit(true);
-            WriteDiff(packer, PackingIntegers.ZigzagEncode((long)(newvalue - oldvalue)), buckets64);
+            WriteChangedDiff(packer, PackingIntegers.ZigzagEncode((long)(newvalue - oldvalue)), buckets64);
             return true;
         }
 
