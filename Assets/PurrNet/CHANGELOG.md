@@ -1,3 +1,28 @@
+## [1.24.2-beta.15](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.14...v1.24.2-beta.15) (2026-10-16)
+
+
+### Performance Improvements
+
+* allocate rollback query buffers on demand ([af34fe8](https://github.com/PurrNet/PurrNet/commit/af34fe88477127d73d1d96b8f4786472148fdddb))
+* avoid empty ownership module lookups ([82b2112](https://github.com/PurrNet/PurrNet/commit/82b21124a4cfb4e6b14cd770ba01f2aa1bac6189))
+* batch packed integer buffer writes ([e5cb6eb](https://github.com/PurrNet/PurrNet/commit/e5cb6ebdc1bdad42a32f9faae8bc07b62583425b))
+* carry overflow across unaligned copy chunks ([fd4b1fb](https://github.com/PurrNet/PurrNet/commit/fd4b1fbed03c30b764312cc30be546736db9f4c6))
+* defer codec reflection metadata ([757ebb7](https://github.com/PurrNet/PurrNet/commit/757ebb7e479acf666ccf2dabec1dd3ba2e140c82))
+* exclude core services from codec discovery ([b45d1eb](https://github.com/PurrNet/PurrNet/commit/b45d1eb5a5d8b887701d1479a92f5a3ac4e5910f))
+* fuse integer delta buffer writes ([4cd8ce2](https://github.com/PurrNet/PurrNet/commit/4cd8ce23f1d1463145575aa3951c43a0dc1aec22))
+* generate player identity discovery lists ([9a96888](https://github.com/PurrNet/PurrNet/commit/9a968880b37619f91654398c2b1ccf8791a908ee))
+* identify generated native writers for record reuse ([1d9edfc](https://github.com/PurrNet/PurrNet/commit/1d9edfc4f655b9cfb74819a92699408c9d22b53d))
+* index codec registration methods ([03c2593](https://github.com/PurrNet/PurrNet/commit/03c2593c9509f962433f67db493a3c0cfd4a6266))
+* limit reference codec dependency discovery ([cd11a76](https://github.com/PurrNet/PurrNet/commit/cd11a763a76efd04049fe5d38ca810a8c617dfd2))
+* pack varint data and continuation bits together ([fa4264d](https://github.com/PurrNet/PurrNet/commit/fa4264d497d16cd7605519ac4ec20d7e8bc2ec49))
+* recycle RPC post-processing buffers ([9ccb70c](https://github.com/PurrNet/PurrNet/commit/9ccb70c684c8e46c9348a89b617f1101ec916bd2))
+* register generated native codec pointers ([f49328a](https://github.com/PurrNet/PurrNet/commit/f49328a8d1e2d4411e8b0742fe3b189ab907d14d))
+* remove player identity padding ([3ae5ff7](https://github.com/PurrNet/PurrNet/commit/3ae5ff7e1bf1251840bf9b54a785455385fbdf02))
+* remove unused native writer classification ([882892a](https://github.com/PurrNet/PurrNet/commit/882892a8e0fcf576ce8120c53ba9148b08e04955))
+* reuse bounded fragment reassembly buffers ([fcb82d6](https://github.com/PurrNet/PurrNet/commit/fcb82d6e3b2628d69077f3af15ad8cbee6e61a03))
+* scope identity discovery to dependent assemblies ([0a65ee0](https://github.com/PurrNet/PurrNet/commit/0a65ee0f6d89620d0103d5894fbf4177c56738ec))
+* trim component reference codec dependencies ([b83e524](https://github.com/PurrNet/PurrNet/commit/b83e52443d38325d6dbdcaa396c16af1edade6cd))
+
 ## [1.24.2-beta.14](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.13...v1.24.2-beta.14) (2026-10-15)
 
 
