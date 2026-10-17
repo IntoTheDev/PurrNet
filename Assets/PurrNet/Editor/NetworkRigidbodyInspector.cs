@@ -30,6 +30,11 @@ namespace PurrNet.Editor
 
             serializedObject.ApplyModifiedProperties();
 
+            DrawInspectorExtras();
+        }
+
+        protected override void DrawInspectorExtras()
+        {
             DrawSoftParentInspector();
 
             var identity = target as NetworkIdentity;

@@ -94,6 +94,7 @@ namespace PurrNet.Modules
         private readonly HashSet<PlayerID> _allSeenPlayers = new HashSet<PlayerID>();
         private readonly HashSet<int> _promotedStaleConnectionIds = new HashSet<int>();
         private PlayerID? _promotedLocalPlayerId;
+        private bool _isPromotingToServer;
 
         public IReadOnlyList<PlayerID> players => _players;
 
@@ -242,6 +243,16 @@ namespace PurrNet.Modules
             return _connectionToPlayerId.TryGetValue(conn, out playerId);
         }
 
+        internal bool TryGetAuthenticatedPlayer(Connection conn, out PlayerID playerId)
+        {
+            if (_asServer && !_isPromotingToServer &&
+                _connectionToPlayerId.TryGetValue(conn, out playerId) && !playerId.isServer)
+                return true;
+
+            playerId = default;
+            return false;
+        }
+
         /// <summary>
         /// Check if a playerId is the local player.
         /// </summary>
@@ -311,6 +322,7 @@ namespace PurrNet.Modules
 
         public void PromoteToServerModule()
         {
+            _isPromotingToServer = true;
             _promotedLocalPlayerId = localPlayerId;
             Disable(false);
             _asServer = true;
@@ -349,11 +361,16 @@ namespace PurrNet.Modules
                     continue;
                 }
 
-                _networkManager.TriggerConnectionLeft(keys[i], true);
+                try
+                {
+                    _networkManager.TriggerConnectionLeft(keys[i], true);
+                }
+                catch (Exception e) { PurrLogger.LogException(e); }
             }
 
             _connectionToPlayerId.Clear();
             _promotedLocalPlayerId = null;
+            _isPromotingToServer = false;
         }
 
         public void Enable(bool asServer)
@@ -637,6 +654,8 @@ namespace PurrNet.Modules
 
         public void OnConnected(Connection conn, bool asServer)
         {
+            if (asServer)
+                _promotedStaleConnectionIds.Remove(conn.connectionId);
         }
 
         public void OnConnectionState(ConnectionState state, bool asServer)

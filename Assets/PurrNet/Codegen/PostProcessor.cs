@@ -4164,6 +4164,9 @@ namespace PurrNet.Codegen
                         bool inheritsFromNetworkClass =
                             type.FullName == classFullName || InheritsFrom(type, classFullName);
 
+                        if (inheritsFromNetworkClass && type.HasGenericParameters)
+                            RegisterSerializersProcessor.EnsureNetworkModuleFieldTypesAccessible(type, module);
+
                         using var _rpcMethods = DisposableList<RPCMethod>.Create(32);
 
                         int idOffset = GetIDOffset(type, messages);

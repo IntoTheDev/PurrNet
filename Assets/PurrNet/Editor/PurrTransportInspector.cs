@@ -6,8 +6,16 @@ using UnityEngine;
 namespace PurrNet.Editor
 {
     [CustomEditor(typeof(PurrTransport), true)]
-    public class PurrTransportInspector : UnityEditor.Editor
+    public class PurrTransportInspector : OptionalInspector
     {
+        private static readonly string[] _editorAttributesExcludedProperties =
+        {
+            "_masterServer", "_roomName", "_region", "_host", "_timeoutInSeconds", "_useNat",
+            "_natResolveTimeout", "_webRtcStunServer", "_networkSimulation"
+        };
+
+        protected override string[] editorAttributesExcludedProperties => _editorAttributesExcludedProperties;
+
         private static readonly GUIContent _hostRelayLabel = new("Host relay", "This host's connection to the relay.");
         private static readonly GUIContent _relayBudgetLabel = new("Relay budget",
             "Players connected and traffic relayed this month across all of the linked project's rooms, " +

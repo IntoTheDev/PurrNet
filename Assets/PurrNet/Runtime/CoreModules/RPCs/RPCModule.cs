@@ -84,6 +84,7 @@ namespace PurrNet.Modules
             _unionBatch.Clear();
             _immediateBatch.Clear();
             _immediateContentFlushed = false;
+            RouteHostClientBatchesLocally();
         }
 
         public void PostPromoteToServerModule() { }
@@ -112,8 +113,34 @@ namespace PurrNet.Modules
                 sendAsImmediate: true);
             _immediateBatch.onImmediateAutoFlush = MarkImmediateContentPending;
 
+            if (asServer)
+                RouteHostClientBatchesLocally();
+
             _playersManager.RegisterImmediateType<ImmediateRPCBatchPacket>();
             _playersManager.Subscribe<ImmediateRPCBatchPacket>(OnImmediateBatchReceived);
+        }
+
+        private void RouteHostClientBatchesLocally()
+        {
+            _unionBatch.isLocalClient = IsHostClient;
+            _unionBatch.deliverLocally = DeliverToHostClient;
+            _immediateBatch.isLocalClient = IsHostClient;
+            _immediateBatch.deliverLocally = DeliverToHostClient;
+        }
+
+        private bool IsHostClient(PlayerID player) => _manager.isHost && _manager.localPlayer == player;
+
+        // Server side of a host: the host's client shares the server's identities, so its RPCs are
+        // handed over at flush time, in the order they were queued, like a remote client's stream.
+        // Through the transport they would land after anything the server despawned meanwhile.
+        private void DeliverToHostClient(Size count, BitData payload, bool immediate)
+        {
+            if (!_manager.TryGetRpcModule(false, out var hostClient) || hostClient == this)
+                return;
+
+            if (immediate)
+                hostClient.OnImmediateBatchReceived(PlayerID.Server, new ImmediateRPCBatchPacket { count = count, data = payload }, false);
+            else hostClient._unionBatch.ProcessReceivedBatch(PlayerID.Server, count, payload, false);
         }
 
         private bool _receivingImmediateLane;

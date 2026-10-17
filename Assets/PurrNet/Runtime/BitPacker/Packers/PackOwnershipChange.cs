@@ -131,43 +131,53 @@ namespace PurrNet.Packing
 
             Size totalCount = default;
             Packer<Size>.Read(packer, ref totalCount);
-
-            identities = DisposableList<NetworkID>.Create(totalCount);
+            int count = DeserializationLimits.ValidateCollectionLength<NetworkID>(totalCount.value);
 
             bool useRLE = default;
             packer.Read(ref useRLE);
+            identities = DisposableList<NetworkID>.Create(DeserializationLimits.ClampCapacity(packer, count));
 
-            if (!useRLE)
+            try
             {
-                for (int i = 0; i < totalCount; i++)
+                if (!useRLE)
                 {
-                    NetworkID identity = default;
-                    Packer<NetworkID>.Read(packer, ref identity);
-                    identities.Add(identity);
+                    for (int i = 0; i < count; i++)
+                    {
+                        NetworkID identity = default;
+                        Packer<NetworkID>.Read(packer, ref identity);
+                        identities.Add(identity);
+                    }
+
+                    return;
                 }
 
-                return;
+                int read = 0;
+
+                while (read < count)
+                {
+                    PlayerID scope = default;
+                    Packer<PlayerID>.Read(packer, ref scope);
+
+                    PackedULong startId = default;
+                    Packer<PackedULong>.Read(packer, ref startId);
+
+                    Size runLength = default;
+                    Packer<Size>.Read(packer, ref runLength);
+                    if (runLength.value == 0 || runLength.value > count - read ||
+                        startId.value > ulong.MaxValue - (runLength.value - 1UL))
+                        throw new System.Runtime.Serialization.SerializationException("Invalid ownership RLE run.");
+
+                    for (int j = 0; j < runLength; j++)
+                        identities.Add(new NetworkID(startId.value + (ulong)j, scope));
+
+                    read += runLength;
+                }
             }
-
-            int read = 0;
-
-            while (read < totalCount)
+            catch
             {
-                PlayerID scope = default;
-                Packer<PlayerID>.Read(packer, ref scope);
-
-                PackedULong startId = default;
-                Packer<PackedULong>.Read(packer, ref startId);
-
-                Size runLength = default;
-                Packer<Size>.Read(packer, ref runLength);
-
-                for (int j = 0; j < runLength; j++)
-                {
-                    identities.Add(new NetworkID(startId.value + (ulong)j, scope));
-                }
-
-                read += runLength;
+                identities.Dispose();
+                identities = default;
+                throw;
             }
         }
     }

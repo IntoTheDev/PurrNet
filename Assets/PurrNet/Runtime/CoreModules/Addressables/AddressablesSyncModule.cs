@@ -99,13 +99,17 @@ namespace PurrNet.Modules
             if (!asServer)
                 return;
 
+            var guid = packet.guid.value ?? string.Empty;
+
+            if (!_manager.addressableNetworkPrefabs ||
+                !_manager.addressableNetworkPrefabs.TryGetPrefabDataByGuid(guid, out _))
+                return;
+
             if (!_clientLoadedGuids.TryGetValue(player, out var set))
             {
                 set = new HashSet<string>();
                 _clientLoadedGuids[player] = set;
             }
-
-            var guid = packet.guid.value ?? string.Empty;
 
             if (packet.loaded)
                 set.Add(guid);

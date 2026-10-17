@@ -366,6 +366,8 @@ namespace PurrNet
 #if UNITY_PHYSICS_3D || UNITY_PHYSICS_2D
         private Transform _networkPosePositionParent;
         private Vector3 _networkPosePositionAnchor;
+        private bool _hasNetworkPoseAbsolute;
+        private double3 _networkPoseAbsolute;
         private Transform _networkPoseRotationParent;
         private Quaternion _networkPoseRotationAnchor;
 #endif
@@ -1113,10 +1115,20 @@ namespace PurrNet
             _networkPosePositionAnchor = nparent
                 ? nparent.InverseTransformPoint(worldPosition)
                 : worldPosition;
+            _hasNetworkPoseAbsolute = false;
+        }
+
+        private void CaptureNetworkPosePosition(in Vector3WithParent sample)
+        {
+            CaptureNetworkPosePosition(sample.position);
+            _hasNetworkPoseAbsolute = sample.TryGetAbsolute(out _networkPoseAbsolute);
         }
 
         private Vector3 ResolveNetworkPosePosition()
         {
+            if (_hasNetworkPoseAbsolute && TryResolvePositionTransform(out var positionTrs))
+                return positionTrs.ToLocal(this, _networkPoseAbsolute);
+
             var nparent = _networkPosePositionParent;
             return _syncPosition == SyncMode.Local && nparent && _trs.parent == nparent
                 ? nparent.TransformPoint(_networkPosePositionAnchor)
@@ -1221,7 +1233,8 @@ namespace PurrNet
 
             if (syncPosition)
             {
-                worldPos = _position.Advance(Time.unscaledDeltaTime).position;
+                var positionSample = _position.Advance(Time.unscaledDeltaTime);
+                worldPos = positionSample.position;
 #if UNITY_PHYSICS_3D
                 if (hasRigidbody)
                 {
@@ -1241,7 +1254,7 @@ namespace PurrNet
                     (_trs.position - worldPos).sqrMagnitude > POSE_VECTOR_EPSILON_SQR;
                 position = worldPos;
 #if UNITY_PHYSICS_3D || UNITY_PHYSICS_2D
-                CaptureNetworkPosePosition(worldPos);
+                CaptureNetworkPosePosition(in positionSample);
 #endif
             }
 
@@ -2035,6 +2048,13 @@ namespace PurrNet
                 posDelta += _corrPosOffset;
                 rotDelta = Quaternion.Slerp(Quaternion.identity, _corrRotOffset, _corrWeight) * rotDelta;
                 scaleDelta += _corrScaleOffset * _corrWeight;
+            }
+
+            if (posDelta.sqrMagnitude > MAX_SEAM_DISTANCE * MAX_SEAM_DISTANCE)
+            {
+                _hasCorrOffset = false;
+                _hasCorrPrevTarget = false;
+                return;
             }
 
             _corrPosOffset = posDelta;
