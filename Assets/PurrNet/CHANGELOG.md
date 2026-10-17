@@ -1,3 +1,10 @@
+# [1.25.0-beta.3](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.2...v1.25.0-beta.3) (2026-10-17)
+
+
+### Bug Fixes
+
+* refresh NetworkTransform pose before capture after an in-tick reparent ([#333](https://github.com/PurrNet/PurrNet/issues/333)) ([992383a](https://github.com/PurrNet/PurrNet/commit/992383a44b939f5b13599ebc7eb2ed729c4cdf42))
+
 # [1.25.0-beta.2](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.1...v1.25.0-beta.2) (2026-10-17)
 
 
