@@ -579,6 +579,27 @@ namespace PurrNet.Packing
             return data;
         }
 
+        /// <summary>
+        /// True when a reader can take <paramref name="bits"/> more bits without running past the
+        /// logical data, the same bound <see cref="EnsureBitsExist(int)"/> enforces for reads.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal bool HasReadableBits(int bits) =>
+            _isReading && bits >= 0 && _positionInBits >= _readStartInBits && _positionInBits <= _readEndInBits &&
+            bits <= _readEndInBits - _positionInBits;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal ulong PeekBitsWithoutChecks(byte bits)
+        {
+            int position = _positionInBits;
+            ulong value = ReadBitsWithoutChecks(bits);
+            _positionInBits = position;
+            return value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void SkipBitsWithoutChecks(int bits) => _positionInBits += bits;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe bool ReadBit()
         {
