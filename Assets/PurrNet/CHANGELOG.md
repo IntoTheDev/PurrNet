@@ -1,3 +1,15 @@
+# [1.25.0-beta.2](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.1...v1.25.0-beta.2) (2026-10-17)
+
+
+### Performance Improvements
+
+* check pending NTP requests without locking every packet ([5e5de22](https://github.com/PurrNet/PurrNet/commit/5e5de22c7520d46e2830898bcc8279f10d155107))
+* compare unmanaged collections in one memcmp ([80caeb3](https://github.com/PurrNet/PurrNet/commit/80caeb30d045ed539793edcba1692da93c417311))
+* encode 32-bit integer deltas with constant bucket widths ([e10133b](https://github.com/PurrNet/PurrNet/commit/e10133b11fe007fd428b2d56a9cfab1aa320e822))
+* keep bit checks small enough to inline ([60dd809](https://github.com/PurrNet/PurrNet/commit/60dd8098a356c93881c8acf78a466e8a4a4c1f37))
+* keep the 32-bit delta helpers out of serializer discovery ([9b74959](https://github.com/PurrNet/PurrNet/commit/9b74959ef994d05aaf68c161f5913b68ccfa1cb7))
+* read delta integers with one buffer access ([a342321](https://github.com/PurrNet/PurrNet/commit/a3423217b7d89b8ce26b4ee696e800eb499fc57e))
+
 # [1.25.0-beta.1](https://github.com/PurrNet/PurrNet/compare/v1.24.2-beta.16...v1.25.0-beta.1) (2026-10-16)
 
 
