@@ -1,3 +1,10 @@
+# [1.25.0-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.3...v1.25.0-beta.4) (2026-10-19)
+
+
+### Bug Fixes
+
+* CompositeTransport keeps connections and UTPTransport can't start a ([4695d9d](https://github.com/PurrNet/PurrNet/commit/4695d9d8461c5dd3149246aa60b520392720d561))
+
 # [1.25.0-beta.3](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.2...v1.25.0-beta.3) (2026-10-17)
 
 
