@@ -11,6 +11,8 @@ namespace PurrNet.Transports
 
     internal delegate void OnCompositeDisconnected(int transportIdx, Connection conn, DisconnectReason reason, bool asServer);
 
+    internal delegate void OnCompositeConnectionState(int transportIdx, ConnectionState state, bool asServer);
+
     internal class CompositeTransportEvents
     {
         private int index { get; set; }
@@ -21,6 +23,7 @@ namespace PurrNet.Transports
         public event OnCompositeConnected onConnected;
         public event OnCompositeDisconnected onDisconnected;
         public event OnCompositeDataReceived onDataReceived;
+        public event OnCompositeConnectionState onConnectionState;
 
         public void Subscribe(int idx, ITransport transport)
         {
@@ -32,6 +35,7 @@ namespace PurrNet.Transports
             _transport.onConnected += OnConnected;
             _transport.onDisconnected += OnDisconnected;
             _transport.onDataReceived += OnDataReceived;
+            _transport.onConnectionState += OnConnectionState;
         }
 
         public void Unsubscribe()
@@ -41,7 +45,13 @@ namespace PurrNet.Transports
             _transport.onConnected -= OnConnected;
             _transport.onDisconnected -= OnDisconnected;
             _transport.onDataReceived -= OnDataReceived;
+            _transport.onConnectionState -= OnConnectionState;
             _transport = null;
+        }
+
+        private void OnConnectionState(ConnectionState state, bool asServer)
+        {
+            onConnectionState?.Invoke(index, state, asServer);
         }
 
         private void OnDataReceived(Connection conn, ByteData data, bool asServer)
@@ -386,6 +396,7 @@ namespace PurrNet.Transports
                 events.onConnected += OnTransportConnected;
                 events.onDisconnected += OnTransportDisconnected;
                 events.onDataReceived += OnTransportDataReceived;
+                events.onConnectionState += OnTransportConnectionState;
                 _events.Add(events);
             }
 
@@ -442,6 +453,19 @@ namespace PurrNet.Transports
             {
                 _clientEvent.Unsubscribe();
                 onDisconnected?.Invoke(conn, reason, false);
+            }
+        }
+
+        private void OnTransportConnectionState(int transportidx, ConnectionState state, bool asServer)
+        {
+            if (!asServer || state != ConnectionState.Disconnected || !_internalIsListening)
+                return;
+
+            for (int i = _connections.Count - 1; i >= 0; i--)
+            {
+                var routed = _rawConnections[_connections[i].connectionId];
+                if (routed.transportIdx == transportidx)
+                    OnTransportDisconnected(transportidx, routed.originalConnection, DisconnectReason.ServerRequest, true);
             }
         }
 
