@@ -169,6 +169,8 @@ namespace PurrNet.Transports
         readonly List<RoutedConnection> _rawConnections = new List<RoutedConnection>();
 
         private bool _internalIsListening;
+        private float[] _relistenDelays;
+        private float[] _relistenTimes;
 
         public ConnectionState listenerState
         {
@@ -195,7 +197,7 @@ namespace PurrNet.Transports
 
                 if (_internalIsListening)
                 {
-                    if (_ensureAllServersStart)
+                    if (_ensureAllServersStart && _prevServerState != ConnectionState.Connected)
                         return anyConnecting ? ConnectionState.Connecting : ConnectionState.Connected;
                     return anyConnected ? ConnectionState.Connected : ConnectionState.Connecting;
                 }
@@ -384,11 +386,26 @@ namespace PurrNet.Transports
                 if (_transports[i])
                     _transports[i].transport.UnityUpdate(delta);
             }
+
+            if (!_internalIsListening)
+                return;
+
+            for (int i = 0; i < _transports.Length; i++)
+            {
+                if (_relistenDelays[i] > 0f && Time.realtimeSinceStartup >= _relistenTimes[i] && _transports[i] &&
+                    _transports[i].transport.listenerState == ConnectionState.Disconnected)
+                {
+                    _relistenTimes[i] = Time.realtimeSinceStartup + _relistenDelays[i];
+                    StartServerTransport(i);
+                }
+            }
         }
 
         private void SetupEvents()
         {
             _events.Clear();
+            _relistenDelays = new float[_transports.Length];
+            _relistenTimes = new float[_transports.Length];
 
             for (int i = 0; i < _transports.Length; i++)
             {
@@ -458,7 +475,13 @@ namespace PurrNet.Transports
 
         private void OnTransportConnectionState(int transportidx, ConnectionState state, bool asServer)
         {
-            if (!asServer || state != ConnectionState.Disconnected || !_internalIsListening)
+            if (!asServer || !_internalIsListening)
+                return;
+
+            if (state == ConnectionState.Connected)
+                _relistenDelays[transportidx] = 0f;
+
+            if (state != ConnectionState.Disconnected)
                 return;
 
             for (int i = _connections.Count - 1; i >= 0; i--)
@@ -467,6 +490,12 @@ namespace PurrNet.Transports
                 if (routed.transportIdx == transportidx)
                     OnTransportDisconnected(transportidx, routed.originalConnection, DisconnectReason.ServerRequest, true);
             }
+
+            if (_relistenDelays[transportidx] < 0f)
+                return;
+
+            _relistenDelays[transportidx] = Mathf.Clamp(_relistenDelays[transportidx] * 2f, 1f, 5f);
+            _relistenTimes[transportidx] = Time.realtimeSinceStartup + _relistenDelays[transportidx];
         }
 
         private void OnTransportConnected(int transportidx, Connection conn, bool asServer)
@@ -542,6 +571,8 @@ namespace PurrNet.Transports
                 return;
 
             _internalIsListening = true;
+            for (int i = 0; i < _relistenDelays.Length; i++)
+                _relistenDelays[i] = -1f;
 
             TriggerConnectionStateEvent(true);
 
@@ -553,21 +584,25 @@ namespace PurrNet.Transports
                     if (!e.isSubscribed)
                     {
                         _events[i].Subscribe(i, _transports[i].transport);
-
-                        try
-                        {
-                            _transports[i].StartServerInternalOnly();
-                        }
-                        catch (Exception ex)
-                        {
-                            PurrLogger.LogError(
-                                $"Failed to start {_transports[i].GetType().Name}: {ex.Message}\n{ex.StackTrace}");
-                        }
+                        StartServerTransport(i);
                     }
                 }
             }
 
             TriggerConnectionStateEvent(true);
+        }
+
+        private void StartServerTransport(int index)
+        {
+            try
+            {
+                _transports[index].StartServerInternalOnly();
+            }
+            catch (Exception ex)
+            {
+                PurrLogger.LogError(
+                    $"Failed to start {_transports[index].GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+            }
         }
 
         private bool ShouldStartServerTransport(GenericTransport transport)
