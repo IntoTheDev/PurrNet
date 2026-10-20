@@ -1,3 +1,10 @@
+# [1.25.0-beta.5](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.4...v1.25.0-beta.5) (2026-10-20)
+
+
+### Bug Fixes
+
+* listen on the relay again after the host's link drops ([6600f0c](https://github.com/PurrNet/PurrNet/commit/6600f0cc86499d1993c0f808c477ae52b3b3958a))
+
 # [1.25.0-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.3...v1.25.0-beta.4) (2026-10-19)
 
 
