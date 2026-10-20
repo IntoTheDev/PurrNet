@@ -1,3 +1,10 @@
+# [1.25.0-beta.8](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.7...v1.25.0-beta.8) (2026-10-20)
+
+
+### Bug Fixes
+
+* SyncVar<T> class values not editable in inspector ([1b9554e](https://github.com/PurrNet/PurrNet/commit/1b9554e6957dbac91445c15e1f816f02488a8285))
+
 # [1.25.0-beta.7](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.6...v1.25.0-beta.7) (2026-10-20)
 
 
