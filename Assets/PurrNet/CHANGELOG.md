@@ -1,3 +1,10 @@
+# [1.25.0-beta.7](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.6...v1.25.0-beta.7) (2026-10-20)
+
+
+### Bug Fixes
+
+* allow manual spawners to include an owner from the get-go ([6eb3b7c](https://github.com/PurrNet/PurrNet/commit/6eb3b7cd3bbc785955baa638b56d2625ef01fa30))
+
 # [1.25.0-beta.6](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.5...v1.25.0-beta.6) (2026-10-20)
 
 
