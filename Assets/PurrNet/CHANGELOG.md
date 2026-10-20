@@ -1,3 +1,10 @@
+# [1.25.0-beta.6](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.5...v1.25.0-beta.6) (2026-10-20)
+
+
+### Bug Fixes
+
+* find best region flaky API ([05e10d8](https://github.com/PurrNet/PurrNet/commit/05e10d82865b7ad1ad4c1903f7a39c41e2c8ce57))
+
 # [1.25.0-beta.5](https://github.com/PurrNet/PurrNet/compare/v1.25.0-beta.4...v1.25.0-beta.5) (2026-10-20)
 
 
