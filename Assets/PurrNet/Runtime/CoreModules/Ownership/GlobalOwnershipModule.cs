@@ -415,9 +415,7 @@ namespace PurrNet.Modules
             using var callbacks = DisposableList<OwnershipCallback>.Create(stateCount);
 
             for (var j = 0; j < stateCount; j++)
-            {
                 HandleOwnershipBatch(data.scene, data.state[j], true, callbacks);
-            }
 
             DispatchOwnershipCallbacks(callbacks);
             _manager.FlushBatchedRPCs();
@@ -668,11 +666,12 @@ namespace PurrNet.Modules
             for (var i = 0; i < callbacks.Count; i++)
             {
                 var info = callbacks[i];
-
                 if (!info.identity)
-                {
                     continue;
-                }
+
+                // An earlier callback may have changed this identity's owner again.
+                if (info.identity.GetOwner(_asServer) != info.newOwner)
+                    continue;
 
                 info.identity.TriggerOnOwnerChanged(info.oldOwner, info.newOwner, _asServer, info.isSpawner);
             }
