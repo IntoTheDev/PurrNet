@@ -90,6 +90,8 @@ namespace PurrNet.Modules
                 identity.internalOwnerServer = player;
             else identity.internalOwnerClient = player;
 
+            identity.RecacheHasConnectedOwner();
+
             return true;
         }
 
@@ -108,6 +110,9 @@ namespace PurrNet.Modules
                 if (_asServer)
                     identity.internalOwnerServer = null;
                 else identity.internalOwnerClient = null;
+
+                identity.RecacheHasConnectedOwner();
+
                 return true;
             }
 
